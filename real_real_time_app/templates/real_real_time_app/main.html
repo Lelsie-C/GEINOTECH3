@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GEINOTECH codelab</title>
+    <style>
+      /* Dark grey background and centered layout */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #2d2d2d; /* Dark grey background */
+        color: #f8f8f2; /* Light text color */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      /* Container for code editor and output */
+      #container {
+        display: flex;
+        width: 80%;
+        height: 70vh;
+        gap: 20px; /* Space between boxes */
+      }
+
+      /* Styling for boxes (code editor and output) */
+      .box {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #444; /* Darker border */
+        border-radius: 5px;
+        background-color: #1e1e1e; /* Dark background for boxes */
+        overflow: auto;
+      }
+
+      /* Code editor textarea */
+      textarea {
+        width: 100%;
+        height: 90%;
+        background-color: #1e1e1e; /* Dark background */
+        color: #f8f8f2; /* Light text color */
+        border: none;
+        font-family: "Courier New", Courier, monospace; /* Monospace font for code */
+        font-size: 14px;
+        resize: none; /* Disable resizing */
+      }
+
+      /* Output box */
+      #output-box {
+        background-color: #1e1e1e; /* Dark background */
+        color: #f8f8f2; /* Light text color */
+        font-family: "Courier New", Courier, monospace; /* Monospace font for output */
+        font-size: 14px;
+        white-space: pre-wrap; /* Preserve whitespace and line breaks */
+      }
+
+      /* Bottom section (messages, user count, and leave button) */
+      #bottom-section {
+        display: flex;
+        width: 80%;
+        justify-content: space-between;
+        margin-top: 20px;
+        gap: 20px; /* Space between elements */
+      }
+
+      /* Message box */
+      #message-box {
+        flex: 3;
+        background-color: #1e1e1e; /* Dark background */
+        border: 1px solid #444; /* Darker border */
+        border-radius: 5px;
+        padding: 10px 20px;
+      }
+
+      /* Message log (scrollable) */
+      #message-log {
+        height: 100px;
+        overflow-y: auto; /* Scrollable messages */
+        margin-bottom: 10px;
+      }
+
+      /* Message input */
+      #message-input {
+        width: calc(100% - 90px); /* Adjust width for button */
+        padding: 8px;
+        background-color: #1e1e1e; /* Dark background */
+        color: #f8f8f2; /* Light text color */
+        border: 1px solid #444; /* Darker border */
+        border-radius: 5px;
+      }
+
+      /* Buttons */
+      button {
+        padding: 8px 16px;
+        background-color: #444; /* Darker background */
+        color: #f8f8f2; /* Light text color */
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background-color: #555; /* Slightly lighter on hover */
+      }
+
+      /* User count display */
+      #user-count {
+        flex: 1;
+        text-align: center;
+        font-weight: bold;
+        background-color: #1e1e1e; /* Dark background */
+        border: 1px solid #444; /* Darker border */
+        border-radius: 5px;
+        padding: 10px;
+      }
+
+      /* Leave button */
+      #leave-session {
+        background-color: #ff5555; /* Red color for leave button */
+      }
+
+      #leave-session:hover {
+        background-color: #ff7777; /* Lighter red on hover */
+      }
+
+      /* Syntax highlighting for code (basic example) */
+      .keyword {
+        color: #569cd6; /* Blue for keywords */
+      }
+      .string {
+        color: #ce9178; /* Orange for strings */
+      }
+      .comment {
+        color: #6a9955; /* Green for comments */
+      }
+    </style>
+  </head>
+  <body>
+    <h2 style="color: skyblue">GEINOTECH CodeLab</h2>
+
+    <div id="container">
+      <!-- Code editor (Admin writes here, users see real-time updates) -->
+      <div class="box">
+        <h3>Code Editor</h3>
+        <textarea
+          id="code-box"
+          {%
+          if
+          not
+          is_admin
+          %}disabled{%
+          endif
+          %}
+        ></textarea>
+        {% if is_admin %}
+        <button id="run-code">Run Code</button>
+        {% endif %}
+      </div>
+
+      <!-- Output display -->
+      <div class="box">
+        <h3>Output</h3>
+        <div id="output-box"></div>
+      </div>
+    </div>
+
+    <div id="bottom-section">
+      <!-- Message section (Users send messages to the admin) -->
+      <div id="message-box">
+        <h3>Messages</h3>
+        <div id="message-log"></div>
+        <input type="text" id="message-input" placeholder="Type a message..." />
+        <button id="send-message">Send</button>
+      </div>
+
+      <!-- User count display -->
+      <div id="user-count">
+        <h3>Users Connected</h3>
+        <p id="connected-users">0</p>
+      </div>
+
+      <!-- Leave button (Users only) -->
+      {% if not is_admin %}
+      <button id="leave-session">Leave</button>
+      {% endif %}
+    </div>
+
+    <script>
+      // Check if the user is an admin
+      const isAdmin = {{ is_admin|yesno:"true,false" }};
+
+      // Establish WebSocket connection
+      const socket = new WebSocket("ws://" + window.location.host + "/ws/code/");
+
+      // When connection opens
+      socket.onopen = function () {
+        console.log("Connected to WebSocket");
+      };
+
+      // When receiving a message
+      socket.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "code_update") {
+          document.getElementById("code-box").value = data.code;
+        } else if (data.type === "output_update") {
+          document.getElementById("output-box").innerText = data.output;  // Display output
+        } else if (data.type === "message_update") {
+          const messageLog = document.getElementById("message-log");
+          messageLog.innerHTML += `<p><b>${data.sender}:</b> ${data.message}</p>`;
+          messageLog.scrollTop = messageLog.scrollHeight; // Auto-scroll to the bottom
+        } else if (data.type === "user_update") {
+          document.getElementById("connected-users").innerText = data.users.length;
+        }
+      };
+
+      // If admin, send code updates in real time
+      if (isAdmin) {
+        document.getElementById("code-box").addEventListener("input", function () {
+          socket.send(JSON.stringify({
+            type: "code_update",
+            code: this.value
+          }));
+        });
+
+        // Run code when the admin clicks "Run"
+        document.getElementById("run-code").addEventListener("click", function () {
+          const code = document.getElementById("code-box").value;
+          socket.send(JSON.stringify({
+            type: "run_code",
+            code: code
+          }));
+        });
+      }
+
+      // Allow all users to send messages
+      document.getElementById("send-message").addEventListener("click", function () {
+        const messageInput = document.getElementById("message-input");
+        const message = messageInput.value;
+        if (message.trim() !== "") {
+          socket.send(JSON.stringify({
+            type: "send_message",
+            message: message,
+            sender: "{{ request.session.username }}"  // Use the user's name
+          }));
+          messageInput.value = ""; // Clear input field
+        }
+      });
+
+      // Leave session button
+      document.getElementById("leave-session").addEventListener("click", function () {
+        window.location.href = "/";
+      });
+
+      // When connection closes
+      socket.onclose = function () {
+        console.log("Disconnected from WebSocket");
+      };
+    </script>
+  </body>
+</html>
