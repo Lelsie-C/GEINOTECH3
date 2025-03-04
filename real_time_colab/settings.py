@@ -9,9 +9,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-p4w6*dh_7g#*e%xov-^^9bpbkwsnb#)xto3n-w^^_*ru16ur1s'  # Replace with a secure key in production
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # Set to False in production
+DEBUG = False  # Set to False in production
 
-ALLOWED_HOSTS = ['*']  # Update with your domain in production
+ALLOWED_HOSTS = ['*', 'geinotech-colab.onrender.com']  # Update with your domain in production
 
 # Application definition
 INSTALLED_APPS = [
