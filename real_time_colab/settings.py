@@ -18,16 +18,23 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    'django.contrib.sessions',  # Ensure this is included
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',  # Add Django Channels
-    'real_real_time_app',  # Replace with your app name
+    'real_real_time_app',  # Your app
 ]
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # For development
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  # Required for session handling
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Ensure this is included
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -99,21 +106,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Django Channels Configuration
 ASGI_APPLICATION = 'real_time_colab.asgi.application'
 
-# Channel Layers (Required for WebSocket communication)
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use for development
-        # For production, use Redis:
-        # "BACKEND": "channels_redis.core.RedisChannelLayer",
-        # "CONFIG": {
-        #     "hosts": [("redis://localhost:6379/0")],  # Replace with your Redis server details
-        # },
-    },
-}
 
 # Session Configuration (Required for WebSocket authentication)
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # Use signed cookies for sessions
 SESSION_COOKIE_NAME = "real_time_colab_session"  # Custom session cookie name
+SESSION_COOKIE_AGE = 1209600  
 
 # Static and Media Files (Optional)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For production

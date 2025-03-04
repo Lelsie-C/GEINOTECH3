@@ -1,8 +1,6 @@
-# real_real_time_app/routing.py
-
 from django.urls import re_path
-from .consumers import CodeCollabConsumer
+from . import consumers
 
 websocket_urlpatterns = [
-    re_path(r'ws/code/$', CodeCollabConsumer.as_asgi()),
+    re_path(r'ws/code/$', consumers.CodeCollabConsumer.as_asgi()),
 ]

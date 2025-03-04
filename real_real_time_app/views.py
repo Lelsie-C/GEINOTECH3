@@ -1,4 +1,3 @@
-# real_real_time_app/views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.http import JsonResponse
@@ -20,16 +19,12 @@ def login_view(request):
         if code == "12500":  # Admin Code
             request.session["is_admin"] = True
             request.session["username"] = username
-            user = authenticate(username=username)
-            if user:
-                login(request, user)
+            request.session.save()  # Save the session
             return redirect("/main/")
         elif code == "15425":  # User Code
             request.session["is_admin"] = False
             request.session["username"] = username
-            user = authenticate(username=username)
-            if user:
-                login(request, user)
+            request.session.save()  # Save the session
             return redirect("/main/")
         else:
             # Display custom error message for wrong password
@@ -64,6 +59,9 @@ def websocket_disconnect(request):
 def send_user_list_update():
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        "user_updates",
-        {"type": "user_list", "users": list(connected_users)}
+        "code_collab_room",  # Use the same group name as in consumers.py
+        {
+            "type": "user_update",  # Match the type in consumers.py
+            "users": list(connected_users)
+        }
     )

@@ -2,13 +2,22 @@ import json
 import subprocess
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 
 connected_users = set()  # Store connected user info
 
 class CodeCollabConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # Access session information from the scope
-        self.username = self.scope["session"].get("username", "Guest")  # Get username from session
+        session_key = self.scope["session"].session_key
+        session = await self.get_session(session_key)
+        
+        if session is None:
+            # Reject the connection if the session does not exist
+            await self.close()
+            return
+
+        self.username = session.get("username", "Guest")  # Get username from session
 
         # Add user to connected users
         connected_users.add(self.username)
@@ -28,20 +37,31 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
         )
 
     async def disconnect(self, close_code):
-        # Remove user from connected users
-        connected_users.discard(self.username)
+        # Remove user from connected users if username is set
+        if hasattr(self, "username") and self.username in connected_users:
+            connected_users.discard(self.username)
         
-        # Leave WebSocket group
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+            # Leave WebSocket group
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-        # Broadcast updated user list
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "user_update",
-                "users": list(connected_users)
-            }
-        )
+            # Broadcast updated user list
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user_update",
+                    "users": list(connected_users)
+                }
+            )
+
+    @database_sync_to_async
+    def get_session(self, session_key):
+        # Import the Session model here to avoid AppRegistryNotReady
+        from django.contrib.sessions.models import Session
+        try:
+            return Session.objects.get(session_key=session_key)
+        except Session.DoesNotExist:
+            # Handle the case where the session does not exist
+            return None
 
     async def receive(self, text_data):
         data = json.loads(text_data)
