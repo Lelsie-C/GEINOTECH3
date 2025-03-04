@@ -1,1 +1,1 @@
-web: gunicorn your_project_name.asgi:application
+web: gunicorn real_time_colab.asgi:application

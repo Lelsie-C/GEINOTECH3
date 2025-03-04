@@ -1,6 +1,7 @@
 import json
 import subprocess
 from channels.generic.websocket import AsyncWebsocketConsumer
+from asgiref.sync import sync_to_async
 
 connected_users = set()  # Store connected user info
 
@@ -86,7 +87,7 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
                 file.write(code)
             
             # Compile the C++ code
-            compile_process = subprocess.run(
+            compile_process = await sync_to_async(subprocess.run)(
                 ["g++", "temp.cpp", "-o", "temp"],
                 capture_output=True,
                 text=True
@@ -97,7 +98,7 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
                 return f"Compilation Error:\n{compile_process.stderr}"
             
             # Execute the compiled C++ program
-            run_process = subprocess.run(
+            run_process = await sync_to_async(subprocess.run)(
                 ["./temp"],
                 capture_output=True,
                 text=True
