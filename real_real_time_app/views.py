@@ -10,6 +10,7 @@ from django.contrib import messages
 # Store connected users manually (since we are not using Redis)
 connected_users = set()
 
+# views.py
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -19,11 +20,13 @@ def login_view(request):
         if code == "12500":  # Admin Code
             request.session["is_admin"] = True
             request.session["username"] = username
+            request.session["_auth_user_id"] = username  # Set _auth_user_id for authentication
             request.session.save()  # Save the session
             return redirect("/main/")
         elif code == "15425":  # User Code
             request.session["is_admin"] = False
             request.session["username"] = username
+            request.session["_auth_user_id"] = username  # Set _auth_user_id for authentication
             request.session.save()  # Save the session
             return redirect("/main/")
         else:

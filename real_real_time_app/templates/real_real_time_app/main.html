@@ -193,12 +193,18 @@
       // Check if the user is an admin
       const isAdmin = {{ is_admin|yesno:"true,false" }};
 
-      // Establish WebSocket connection
       const socket = new WebSocket("ws://" + window.location.host + "/ws/code/");
 
-      // When connection opens
       socket.onopen = function () {
-        console.log("Connected to WebSocket");
+          console.log("Connected to WebSocket");
+      };
+
+      socket.onerror = function (error) {
+          console.error("WebSocket error:", error);
+      };
+
+      socket.onclose = function (event) {
+          console.log("WebSocket connection closed:", event);
       };
 
       // When receiving a message

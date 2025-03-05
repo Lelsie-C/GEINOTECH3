@@ -6,24 +6,26 @@ from channels.db import database_sync_to_async
 
 connected_users = set()  # Store connected user info
 
+# real_real_time_app/consumers.py
+
 class CodeCollabConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.room_group_name = "code_collab_room"  # Set the room group name here
+
     async def connect(self):
-        # Access session information from the scope
-        session_key = self.scope["session"].session_key
-        session = await self.get_session(session_key)
-        
-        if session is None:
-            # Reject the connection if the session does not exist
-            await self.close()
+        # Check if the session exists and contains the username
+        if "session" not in self.scope or not self.scope["session"].get("username"):
+            await self.close(code=403)  # Reject the connection if not authenticated
             return
 
-        self.username = session.get("username", "Guest")  # Get username from session
+        # Get the username from the session
+        self.username = self.scope["session"].get("username", "Guest")
 
         # Add user to connected users
         connected_users.add(self.username)
 
         # Join WebSocket group
-        self.room_group_name = "code_collab_room"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
@@ -40,7 +42,7 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
         # Remove user from connected users if username is set
         if hasattr(self, "username") and self.username in connected_users:
             connected_users.discard(self.username)
-        
+
             # Leave WebSocket group
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
@@ -52,6 +54,10 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
                     "users": list(connected_users)
                 }
             )
+    @database_sync_to_async
+    def get_connected_users(self):
+        # Get the list of connected users from the database or another source
+        return list(connected_users)  # Replace with your logic
 
     @database_sync_to_async
     def get_session(self, session_key):
