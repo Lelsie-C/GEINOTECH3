@@ -1,12 +1,13 @@
+# real_real_time_app/consumers.py
 import json
 import subprocess
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
+from channels.layers import get_channel_layer
 
-connected_users = set()  # Store connected user info
-
-# real_real_time_app/consumers.py
+# Store connected user info
+connected_users = set()
 
 class CodeCollabConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -54,6 +55,7 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
                     "users": list(connected_users)
                 }
             )
+
     @database_sync_to_async
     def get_connected_users(self):
         # Get the list of connected users from the database or another source

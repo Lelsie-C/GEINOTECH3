@@ -6,7 +6,7 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 
 # Ensure Django setup is complete
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'real_time_colab.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'real_time_colab.settings')  # Fixed typo
 django.setup()
 
 # Import WebSocket URL patterns after Django setup

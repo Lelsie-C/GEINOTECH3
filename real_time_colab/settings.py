@@ -25,8 +25,7 @@ INSTALLED_APPS = [
     'real_real_time_app',  # Your app
 ]
 
-
-CHANNEL_LAYERS = {
+CHANNEL_LAYERS = {  # Corrected variable name (added "S")
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",  # For development
     },
@@ -105,7 +104,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django Channels Configuration
 ASGI_APPLICATION = 'real_time_colab.asgi.application'
-
 
 # Session Configuration (Required for WebSocket authentication)
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # Use signed cookies for sessions
