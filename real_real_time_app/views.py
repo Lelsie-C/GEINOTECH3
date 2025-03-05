@@ -7,10 +7,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.contrib import messages
 
-# Store connected users manually (since we are not using Redis)
-connected_users = set()
 
-# views.py
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -18,17 +15,17 @@ def login_view(request):
         
         # Check if the code is correct
         if code == "12500":  # Admin Code
-            request.session["is_admin"] = True
-            request.session["username"] = username
-            request.session["_auth_user_id"] = username  # Set _auth_user_id for authentication
-            request.session.save()  # Save the session
-            return redirect("/main/")
+            user = authenticate(request, username=username, password="admin_password")  # Use a secure password
+            if user is not None:
+                login(request, user)
+                request.session["is_admin"] = True
+                return redirect("/main/")
         elif code == "15425":  # User Code
-            request.session["is_admin"] = False
-            request.session["username"] = username
-            request.session["_auth_user_id"] = username  # Set _auth_user_id for authentication
-            request.session.save()  # Save the session
-            return redirect("/main/")
+            user = authenticate(request, username=username, password="user_password")  # Use a secure password
+            if user is not None:
+                login(request, user)
+                request.session["is_admin"] = False
+                return redirect("/main/")
         else:
             # Display custom error message for wrong password
             messages.error(request, "Wrong password, contact CHEGHE😎😎 for the password")
@@ -37,9 +34,9 @@ def login_view(request):
     return render(request, "real_real_time_app/login.html")
 
 def main_page(request):
-    if "username" not in request.session:
+    if not request.user.is_authenticated:
         return redirect("/")
-    return render(request, "real_real_time_app/main.html", {"is_admin": request.session["is_admin"], "username": request.session["username"]})
+    return render(request, "real_real_time_app/main.html", {"is_admin": request.session.get("is_admin", False), "username": request.user.username})
 
 @csrf_exempt
 def websocket_connect(request):

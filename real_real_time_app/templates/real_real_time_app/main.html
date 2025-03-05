@@ -193,7 +193,8 @@
       // Check if the user is an admin
       const isAdmin = {{ is_admin|yesno:"true,false" }};
 
-      const socket = new WebSocket("ws://" + window.location.host + "/ws/code/");
+      const socket = new WebSocket("wss://lucky-worlds-crash.loca.lt/ws/code/");
+
 
       socket.onopen = function () {
           console.log("Connected to WebSocket");

@@ -4,7 +4,6 @@ import subprocess
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
-from channels.layers import get_channel_layer
 
 # Store connected user info
 connected_users = set()
@@ -85,18 +84,19 @@ class CodeCollabConsumer(AsyncWebsocketConsumer):
                 }
             )
         elif event_type == "run_code":
-            # Execute C++ code and capture output
-            code = data["code"]
-            output = await self.execute_cpp_code(code)  # Execute the C++ code
-            
-            # Broadcast output update
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "output_update",
-                    "output": output
-                }
-            )
+            # Only allow admins to run code
+            if self.scope["session"].get("is_admin", False):
+                code = data["code"]
+                output = await self.execute_cpp_code(code)  # Execute the C++ code
+                
+                # Broadcast output update
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "output_update",
+                        "output": output
+                    }
+                )
         elif event_type == "send_message":
             # Broadcast message to all users
             await self.channel_layer.group_send(

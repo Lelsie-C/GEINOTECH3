@@ -11,7 +11,10 @@ SECRET_KEY = 'django-insecure-p4w6*dh_7g#*e%xov-^^9bpbkwsnb#)xto3n-w^^_*ru16ur1s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Set to False in production
 
-ALLOWED_HOSTS = ['*', 'geinotech-colab.onrender.com']  # Update with your domain in production
+ALLOWED_HOSTS = ['*', 'geinotech-colab.onrender.com', "lucky-worlds-crash.loca.lt"]  # Update with your domain in production
+CSRF_TRUSTED_ORIGINS = [
+    "https://lucky-worlds-crash.loca.lt"
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -25,9 +28,13 @@ INSTALLED_APPS = [
     'real_real_time_app',  # Your app
 ]
 
-CHANNEL_LAYERS = {  # Corrected variable name (added "S")
+# settings.py
+CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # For development
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis://localhost:6379/0")],  # Replace with your Redis server URL
+        },
     },
 }
 
