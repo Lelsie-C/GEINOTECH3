@@ -19,13 +19,13 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 request.session["is_admin"] = True
-                return redirect("/main/")
+                return redirect("main/")
         elif code == "15425":  # User Code
             user = authenticate(request, username=username, password="user_password")  # Use a secure password
             if user is not None:
                 login(request, user)
                 request.session["is_admin"] = False
-                return redirect("/main/")
+                return redirect("main/")
         else:
             # Display custom error message for wrong password
             messages.error(request, "Wrong password, contact CHEGHE😎😎 for the password")
